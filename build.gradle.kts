@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.h2)
+    implementation(libs.mysql)
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     testImplementation(libs.ktor.server.test.host)
