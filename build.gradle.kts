@@ -26,7 +26,7 @@ application {
 
 ktor {
     fatJar {
-        archiveFileName.set("manqueappi.jar")
+        archiveFileName.set("manqueappi-$version.jar")
     }
 }
 
