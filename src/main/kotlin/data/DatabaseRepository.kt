@@ -14,13 +14,8 @@ import data.tablesql.TableSqlStudentsTFC.person
 import data.tablesql.TableSqlStudentsTFC.phone
 import data.tablesql.TableSqlStudentsTFC.rut
 import data.tablesql.TableSqlStudentsTFC.taller
-import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.selectAll
 
 class DatabaseRepository {
 
@@ -44,7 +39,7 @@ class DatabaseRepository {
         }
     }
 
-    suspend fun deleteStudent(rut: String):Boolean = DatabaseFactory.dbQuery {
+    suspend fun deleteStudent(rut: String): Boolean = DatabaseFactory.dbQuery {
         val deletedCount = TableSqlStudentsTFC.deleteWhere { TableSqlStudentsTFC.rut eq rut }
         deletedCount > 0
     }
@@ -69,10 +64,10 @@ class DatabaseRepository {
         updatedCount > 0
     }
 
-    suspend fun searchStudent(rut: String): List<RemoteDataStudentsTfc> = DatabaseFactory.dbQuery {
-        TableSqlStudentsTFC
-            .select(TableSqlStudentsTFC.rut like rut)
+    suspend fun searchStudent(rut: String): RemoteDataStudentsTfc? = DatabaseFactory.dbQuery {
+        TableSqlStudentsTFC.selectAll()
             .map { toUser(it) }
+            .singleOrNull { it.rut == rut }
     }
 
     private fun toUser(row: ResultRow): RemoteDataStudentsTfc {
