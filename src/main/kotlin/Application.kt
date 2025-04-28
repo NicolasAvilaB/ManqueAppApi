@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    embeddedServer(Netty, port = 3600, host = "0.0.0.0") {
+    embeddedServer(Netty, port = 3600) {
         configureSerialization()
         configureRouting()
         DatabaseFactory.init()
