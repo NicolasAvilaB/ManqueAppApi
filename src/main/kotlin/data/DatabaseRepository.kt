@@ -2,7 +2,7 @@ package data
 
 import data.model.DatabaseFactory
 import data.model.RemoteDataStudentsTfc
-import data.model.UsersTFCWrapper
+import data.model.RemoteListStudentsTfc
 import data.tablesql.TableSqlStudentsTFC
 import data.tablesql.TableSqlStudentsTFC.address
 import data.tablesql.TableSqlStudentsTFC.desHealth
@@ -20,9 +20,25 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 class DatabaseRepository {
 
-    suspend fun getAllUsers(): UsersTFCWrapper? = DatabaseFactory.dbQuery {
-        val users = TableSqlStudentsTFC.selectAll().map { toUser(it) }
-        if (users.isNotEmpty()) UsersTFCWrapper(users) else null
+    suspend fun getAllUsers(): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
+        val studentsList = mutableListOf<RemoteDataStudentsTfc>()
+        TableSqlStudentsTFC.selectAll().forEach { row ->
+            val student = RemoteDataStudentsTfc(
+                rut = row[rut],
+                name = row[name],
+                address = row[address],
+                phone = row[phone],
+                email = row[email],
+                grade = row[grade],
+                desHealth = row[desHealth],
+                person = row[person],
+                taller = row[taller],
+                idTaller = row[idTaller],
+                detailGrade = row[detailGrade]
+            )
+            studentsList.add(student)
+        }
+        RemoteListStudentsTfc(listTFC = studentsList)
     }
 
     suspend fun insertStudent(student: RemoteDataStudentsTfc) = DatabaseFactory.dbQuery {
@@ -66,25 +82,29 @@ class DatabaseRepository {
         updatedCount > 0
     }
 
-    suspend fun searchStudent(rut: String): RemoteDataStudentsTfc? = DatabaseFactory.dbQuery {
+    suspend fun searchStudent(rut: String): RemoteListStudentsTfc? = DatabaseFactory.dbQuery {
         TableSqlStudentsTFC.selectAll()
             .map { toUser(it) }
-            .singleOrNull { it.rut == rut }
+            .singleOrNull { it.listTFC.firstOrNull()?.rut == rut }
     }
 
-    private fun toUser(row: ResultRow): RemoteDataStudentsTfc {
-        return RemoteDataStudentsTfc(
-            rut = row[rut],
-            name = row[name],
-            address = row[address],
-            phone = row[phone],
-            email = row[email],
-            grade = row[grade],
-            desHealth = row[desHealth],
-            person = row[person],
-            taller = row[taller],
-            idTaller = row[idTaller],
-            detailGrade = row[detailGrade],
+    private fun toUser(row: ResultRow): RemoteListStudentsTfc {
+        return RemoteListStudentsTfc(
+            listTFC = listOf(
+                RemoteDataStudentsTfc(
+                    rut = row[rut],
+                    name = row[name],
+                    address = row[address],
+                    phone = row[phone],
+                    email = row[email],
+                    grade = row[grade],
+                    desHealth = row[desHealth],
+                    person = row[person],
+                    taller = row[taller],
+                    idTaller = row[idTaller],
+                    detailGrade = row[detailGrade]
+                )
+            )
         )
     }
 }

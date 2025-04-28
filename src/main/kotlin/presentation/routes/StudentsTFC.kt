@@ -18,7 +18,7 @@ fun Route.studentsTFC() {
 
     get("/studentsTFC") {
         val users = databaseRepository.getAllUsers()
-        call.respond(status = HttpStatusCode.OK, users?.listTfc.orEmpty())
+        call.respond(status = HttpStatusCode.OK, users)
     }
 
     get("/studentsTFC/{rut}") {

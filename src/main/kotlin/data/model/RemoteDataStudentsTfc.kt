@@ -3,6 +3,11 @@ package data.model
 import kotlinx.serialization.Serializable
 
 @Serializable
+data class RemoteListStudentsTfc(
+    val listTFC: List<RemoteDataStudentsTfc>,
+)
+
+@Serializable
 data class RemoteDataStudentsTfc(
     val rut: String?,
     val name: String?,
