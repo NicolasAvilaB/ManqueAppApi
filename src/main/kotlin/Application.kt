@@ -12,8 +12,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    val port = System.getenv("PORT")?.toInt() ?: 8080
-    embeddedServer(Netty, port = port, host = "0.0.0.0") {
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         configureSerialization()
         configureRouting()
         DatabaseFactory.init()
