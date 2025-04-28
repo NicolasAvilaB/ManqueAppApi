@@ -1,4 +1,4 @@
-FROM openjdk:11-jdk-slim
+FROM openjdk:20-jdk-slim
 WORKDIR /app
 COPY manqueappi-0.0.1.jar app.jar
 EXPOSE 8080
