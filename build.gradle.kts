@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlin.plugin.serialization)
+    application
 }
 
 group = "com.manque.app"
@@ -17,6 +18,16 @@ application {
 
 repositories {
     mavenCentral()
+}
+
+application {
+    mainClass.set("io.ktor.server.netty.EngineMain")
+}
+
+ktor {
+    fatJar {
+        archiveFileName.set("manqueappi.jar")
+    }
 }
 
 dependencies {
