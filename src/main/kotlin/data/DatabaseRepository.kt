@@ -21,6 +21,7 @@ import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import kotlin.math.ceil
 
 class DatabaseRepository {
 
@@ -28,7 +29,7 @@ class DatabaseRepository {
         limit: Int,
         page: Int
     ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
-        val totalCount = TableSqlStudentsTFC.selectAll().count()
+        val totalRecords = TableSqlStudentsTFC.selectAll().count()
         val offset = if (page > 1) (page - 1) * limit else 0
         val studentsList = mutableListOf<RemoteDataStudentsTfc>()
         TableSqlStudentsTFC
@@ -53,13 +54,15 @@ class DatabaseRepository {
 
         val hasNextPage = offset + limit < totalCount
         val hasPreviousPage = offset > 0
+        val totalPages = ceil(totalCount.toDouble() / limit).toInt()
 
         RemoteListStudentsTfc(
             limit = limit,
             currentPage = page,
             hasPreviousPage = hasPreviousPage,
             hasNextPage = hasNextPage,
-            totalCount = totalCount,
+            totalRecords = totalRecords,
+            totalPages = totalPages
             listTFC = studentsList
         )
     }
