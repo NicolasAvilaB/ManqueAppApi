@@ -2,6 +2,7 @@ package com.manque.app.data.model
 
 object Constants {
     const val MESSAGE_RUT_NOT_FOUND = "El rut del estudiante no existe, por favor intentelo denuevo"
+    const val MESSAGE_ALL_RECORDS_NOT_FOUND = "No existen registros, esta todo vacío, ingrese nuevos registros"
     const val MESSAGE_STUDENT_NOT_FOUND = "El estudiante no existe, por favor intentelo denuevo"
     const val MESSAGE_STUDENT_DELETED_SUCCESS = "Estudiante eliminado con éxito"
     const val MESSAGE_STUDENT_INSERTED_SUCCESS = "El Estudiante ha sido ingresado exitosamente"

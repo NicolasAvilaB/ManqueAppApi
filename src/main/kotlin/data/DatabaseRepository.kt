@@ -51,14 +51,12 @@ class DatabaseRepository {
             studentsList.add(student)
         }
 
-        val currentPage = if (limit == 0) 1 else (offset / limit).toInt() + 1
         val hasNextPage = offset + limit < totalCount
         val hasPreviousPage = offset > 0
 
         RemoteListStudentsTfc(
             limit = limit,
-            page = page,
-            currentPage = currentPage,
+            currentPage = page,
             hasPreviousPage = hasPreviousPage,
             hasNextPage = hasNextPage,
             totalCount = totalCount,
@@ -118,7 +116,6 @@ class DatabaseRepository {
     private fun toUser(row: ResultRow): RemoteListStudentsTfc {
         return RemoteListStudentsTfc(
             limit = 1,
-            page = 0,
             currentPage = 1,
             hasPreviousPage = false,
             hasNextPage = false,
