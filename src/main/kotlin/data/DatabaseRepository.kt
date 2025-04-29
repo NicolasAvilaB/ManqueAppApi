@@ -122,7 +122,8 @@ class DatabaseRepository {
             currentPage = 1,
             hasPreviousPage = false,
             hasNextPage = false,
-            totalCount = 1,
+            totalRecords = 1,
+            totalPages = 1,
             listTFC = listOf(
                 RemoteDataStudentsTfc(
                     rut = row[rut],
