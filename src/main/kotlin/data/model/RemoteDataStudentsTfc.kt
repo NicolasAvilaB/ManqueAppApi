@@ -8,7 +8,8 @@ data class RemoteListStudentsTfc(
     val currentPage: Int,
     val hasPreviousPage: Boolean,
     val hasNextPage: Boolean,
-    val totalCount: Long,
+    val totalRecords: Long,
+    val totalPages: Int,
     val listTFC: List<RemoteDataStudentsTfc>,
 )
 
