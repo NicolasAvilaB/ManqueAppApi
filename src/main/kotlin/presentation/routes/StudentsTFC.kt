@@ -18,10 +18,10 @@ fun Route.studentsTFC() {
 
     get("/studentsTFC") {
         val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
-        val offset = call.request.queryParameters["offset"]?.toLongOrNull() ?: 0
+        val page = call.request.queryParameters["page"]?.toIntOrNull()?.takeIf { it > 0 } ?: 1
         val users = databaseRepository.getAllUsers(
             limit = limit,
-            offset = offset
+            page = page
         )
         call.respond(status = HttpStatusCode.OK, users)
     }
@@ -30,7 +30,7 @@ fun Route.studentsTFC() {
         val rut = call.parameters["rut"].toString()
         val student = databaseRepository.searchStudent(rut)
         if (student == null) {
-            call.respond(HttpStatusCode.BadRequest, MESSAGE_STUDENT_NOT_FOUND)
+            call.respond(HttpStatusCode.OK, MESSAGE_STUDENT_NOT_FOUND)
         } else {
             call.respond(HttpStatusCode.OK, student)
         }
@@ -45,13 +45,13 @@ fun Route.studentsTFC() {
     delete("/studentsTFC/{rut}") {
         val rut = call.parameters["rut"].toString()
         if (rut == null) {
-            call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_RUT_NOT_FOUND))
+            call.respond(HttpStatusCode.OK, RemoteErrorMessage(MESSAGE_RUT_NOT_FOUND))
         } else {
             val success = databaseRepository.deleteStudent(rut)
             if (success) {
                 call.respond(HttpStatusCode.OK, MESSAGE_STUDENT_DELETED_SUCCESS)
             } else {
-                call.respond(HttpStatusCode.BadRequest, MESSAGE_STUDENT_NOT_FOUND)
+                call.respond(HttpStatusCode.OK, MESSAGE_STUDENT_NOT_FOUND)
             }
         }
     }
@@ -59,14 +59,14 @@ fun Route.studentsTFC() {
     put("/studentsTFC/{rut}") {
         val rut = call.parameters["rut"].toString()
         if (rut == null) {
-            call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_RUT_NOT_FOUND))
+            call.respond(HttpStatusCode.OK, RemoteErrorMessage(MESSAGE_RUT_NOT_FOUND))
         } else {
             val updatedStudent = call.receive<RemoteDataStudentsTfc>()
             val success = databaseRepository.updateStudent(rut, updatedStudent)
             if (success) {
                 call.respond(HttpStatusCode.OK, MESSAGE_STUDENT_UPDATED_SUCCESS)
             } else {
-                call.respond(HttpStatusCode.BadRequest, MESSAGE_STUDENT_NOT_FOUND)
+                call.respond(HttpStatusCode.OK, MESSAGE_STUDENT_NOT_FOUND)
             }
         }
     }

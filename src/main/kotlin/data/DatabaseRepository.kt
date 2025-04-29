@@ -15,21 +15,25 @@ import data.tablesql.TableSqlStudentsTFC.person
 import data.tablesql.TableSqlStudentsTFC.phone
 import data.tablesql.TableSqlStudentsTFC.rut
 import data.tablesql.TableSqlStudentsTFC.taller
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 class DatabaseRepository {
 
     suspend fun getAllUsers(
         limit: Int,
-        offset: Long
+        page: Int
     ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
         val totalCount = TableSqlStudentsTFC.selectAll().count()
-
+        val offset = if (page > 1) (page - 1) * limit else 0
         val studentsList = mutableListOf<RemoteDataStudentsTfc>()
         TableSqlStudentsTFC
             .selectAll()
-            .limit(count = limit).offset(start = offset)
+            .limit(count = limit).offset(start = offset.toLong())
             .forEach { row ->
             val student = RemoteDataStudentsTfc(
                 rut = row[rut],
@@ -53,10 +57,10 @@ class DatabaseRepository {
 
         RemoteListStudentsTfc(
             limit = limit,
-            offset = offset,
+            page = page,
             currentPage = currentPage,
-            hasNextPage = hasNextPage,
             hasPreviousPage = hasPreviousPage,
+            hasNextPage = hasNextPage,
             totalCount = totalCount,
             listTFC = studentsList
         )
@@ -114,10 +118,10 @@ class DatabaseRepository {
     private fun toUser(row: ResultRow): RemoteListStudentsTfc {
         return RemoteListStudentsTfc(
             limit = 1,
-            offset = 0,
+            page = 0,
             currentPage = 1,
-            hasNextPage = false,
             hasPreviousPage = false,
+            hasNextPage = false,
             totalCount = 1,
             listTFC = listOf(
                 RemoteDataStudentsTfc(
