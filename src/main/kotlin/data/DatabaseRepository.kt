@@ -20,9 +20,17 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 class DatabaseRepository {
 
-    suspend fun getAllUsers(): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
+    suspend fun getAllUsers(
+        limit: Int,
+        offset: Long
+    ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
+        val totalCount = TableSqlStudentsTFC.selectAll().count()
+
         val studentsList = mutableListOf<RemoteDataStudentsTfc>()
-        TableSqlStudentsTFC.selectAll().forEach { row ->
+        TableSqlStudentsTFC
+            .selectAll()
+            .limit(count = limit).offset(start = offset)
+            .forEach { row ->
             val student = RemoteDataStudentsTfc(
                 rut = row[rut],
                 name = row[name],
@@ -38,7 +46,20 @@ class DatabaseRepository {
             )
             studentsList.add(student)
         }
-        RemoteListStudentsTfc(listTFC = studentsList)
+
+        val currentPage = if (limit == 0) 1 else (offset / limit).toInt() + 1
+        val hasNextPage = offset + limit < totalCount
+        val hasPreviousPage = offset > 0
+
+        RemoteListStudentsTfc(
+            limit = limit,
+            offset = offset,
+            currentPage = currentPage,
+            hasNextPage = hasNextPage,
+            hasPreviousPage = hasPreviousPage,
+            totalCount = totalCount,
+            listTFC = studentsList
+        )
     }
 
     suspend fun insertStudent(student: RemoteDataStudentsTfc) = DatabaseFactory.dbQuery {
@@ -77,19 +98,27 @@ class DatabaseRepository {
             it[taller] = updatedStudent.taller.toString()
             it[idTaller] = updatedStudent.idTaller ?: 0
             it[detailGrade] = updatedStudent.detailGrade.toString()
-
         }
         updatedCount > 0
     }
 
     suspend fun searchStudent(rut: String): RemoteListStudentsTfc? = DatabaseFactory.dbQuery {
-        TableSqlStudentsTFC.selectAll()
+        TableSqlStudentsTFC
+            .selectAll()
+            .where { TableSqlStudentsTFC.rut eq rut }
+            .withDistinct()
             .map { toUser(it) }
-            .singleOrNull { it.listTFC.firstOrNull()?.rut == rut }
+            .singleOrNull()
     }
 
     private fun toUser(row: ResultRow): RemoteListStudentsTfc {
         return RemoteListStudentsTfc(
+            limit = 1,
+            offset = 0,
+            currentPage = 1,
+            hasNextPage = false,
+            hasPreviousPage = false,
+            totalCount = 1,
             listTFC = listOf(
                 RemoteDataStudentsTfc(
                     rut = row[rut],

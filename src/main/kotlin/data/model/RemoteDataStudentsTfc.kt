@@ -4,6 +4,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RemoteListStudentsTfc(
+    val limit: Int,
+    val offset: Long,
+    val currentPage: Int,
+    val hasNextPage: Boolean,
+    val hasPreviousPage: Boolean,
+    val totalCount: Long,
     val listTFC: List<RemoteDataStudentsTfc>,
 )
 

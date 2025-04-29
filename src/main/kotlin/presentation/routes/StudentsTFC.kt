@@ -17,7 +17,12 @@ fun Route.studentsTFC() {
     val databaseRepository = DatabaseRepository()
 
     get("/studentsTFC") {
-        val users = databaseRepository.getAllUsers()
+        val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+        val offset = call.request.queryParameters["offset"]?.toLongOrNull() ?: 0
+        val users = databaseRepository.getAllUsers(
+            limit = limit,
+            offset = offset
+        )
         call.respond(status = HttpStatusCode.OK, users)
     }
 
