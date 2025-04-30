@@ -4,6 +4,8 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object DatabaseFactory {
 
@@ -17,6 +19,8 @@ object DatabaseFactory {
         TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_REPEATABLE_READ
     }
 
-    fun <T> dbQuery(block: () -> T): T =
-        transaction { block() }
+    suspend fun <T> dbQuery(block: () -> T): T =
+        withContext(Dispatchers.IO) {
+            transaction { block() }
+        }
 }

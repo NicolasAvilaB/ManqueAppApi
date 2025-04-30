@@ -22,48 +22,63 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import kotlin.math.ceil
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 class DatabaseRepository {
+
+    private var studentsList: MutableList<RemoteDataStudentsTfc> = mutableListOf()
+    private var lastKnownTotalRecords: Int = 0
 
     suspend fun getAllUsers(
         limit: Int,
         page: Int
-    ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
-        val totalRecords = TableSqlStudentsTFC.selectAll().count()
-        val offset = if (page > 1) (page - 1) * limit else 0
-        val studentsList = mutableListOf<RemoteDataStudentsTfc>()
-        TableSqlStudentsTFC
-            .selectAll()
-            .limit(count = limit).offset(start = offset.toLong())
-            .forEach { row ->
-            val student = RemoteDataStudentsTfc(
-                rut = row[rut],
-                name = row[name],
-                address = row[address],
-                phone = row[phone],
-                email = row[email],
-                grade = row[grade],
-                desHealth = row[desHealth],
-                person = row[person],
-                taller = row[taller],
-                idTaller = row[idTaller],
-                detailGrade = row[detailGrade]
-            )
-            studentsList.add(student)
+    ): Flow<RemoteListStudentsTfc> = flow {
+        val totalRecords = TableSqlStudentsTFC.select(rut).count()
+
+        if (totalRecords.toInt() != lastKnownTotalRecords || studentsList.isEmpty()) {
+            studentsList.clear()
+            val offset = if (page > 1) (page - 1) * limit else 0
+            TableSqlStudentsTFC
+                .selectAll()
+                .limit(count = limit)
+                .offset(start = offset.toLong())
+                .forEach { row ->
+                    val student = RemoteDataStudentsTfc(
+                        rut = row[rut],
+                        name = row[name],
+                        address = row[address],
+                        phone = row[phone],
+                        email = row[email],
+                        grade = row[grade],
+                        desHealth = row[desHealth],
+                        person = row[person],
+                        taller = row[taller],
+                        idTaller = row[idTaller],
+                        detailGrade = row[detailGrade]
+                    )
+                    studentsList.add(student)
+                }
+            lastKnownTotalRecords = totalRecords.toInt()
         }
 
-        val hasNextPage = offset + limit < totalCount
-        val hasPreviousPage = offset > 0
-        val totalPages = ceil(totalCount.toDouble() / limit).toInt()
+        val offset = if (page > 1) (page - 1) * limit else 0
+        val paginatedUsers = studentsList.subList(offset, (offset + limit).coerceAtMost(studentsList.size))
 
-        RemoteListStudentsTfc(
-            limit = limit,
-            currentPage = page,
-            hasPreviousPage = hasPreviousPage,
-            hasNextPage = hasNextPage,
-            totalRecords = totalRecords,
-            totalPages = totalPages
-            listTFC = studentsList
+        val hasNextPage = offset + limit < totalRecords
+        val hasPreviousPage = offset > 0
+        val totalPages = ceil(totalRecords.toDouble() / limit).toInt()
+
+        emit(
+            RemoteListStudentsTfc(
+                limit = limit,
+                currentPage = page,
+                hasPreviousPage = hasPreviousPage,
+                hasNextPage = hasNextPage,
+                totalRecords = totalRecords,
+                totalPages = totalPages,
+                listTFC = paginatedUsers
+            )
         )
     }
 
