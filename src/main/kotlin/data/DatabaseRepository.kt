@@ -22,8 +22,6 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import kotlin.math.ceil
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 class DatabaseRepository {
 
@@ -33,7 +31,7 @@ class DatabaseRepository {
     suspend fun getAllUsers(
         limit: Int,
         page: Int
-    ): Flow<RemoteListStudentsTfc> = flow {
+    ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
         val totalRecords = TableSqlStudentsTFC.select(rut).count()
 
         if (totalRecords.toInt() != lastKnownTotalRecords || studentsList.isEmpty()) {
@@ -69,16 +67,14 @@ class DatabaseRepository {
         val hasPreviousPage = offset > 0
         val totalPages = ceil(totalRecords.toDouble() / limit).toInt()
 
-        emit(
-            RemoteListStudentsTfc(
-                limit = limit,
-                currentPage = page,
-                hasPreviousPage = hasPreviousPage,
-                hasNextPage = hasNextPage,
-                totalRecords = totalRecords,
-                totalPages = totalPages,
-                listTFC = paginatedUsers
-            )
+        RemoteListStudentsTfc(
+            limit = limit,
+            currentPage = page,
+            hasPreviousPage = hasPreviousPage,
+            hasNextPage = hasNextPage,
+            totalRecords = totalRecords,
+            totalPages = totalPages,
+            listTFC = paginatedUsers
         )
     }
 
