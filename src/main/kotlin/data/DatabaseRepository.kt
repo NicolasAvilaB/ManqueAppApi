@@ -25,43 +25,32 @@ import kotlin.math.ceil
 
 class DatabaseRepository {
 
-    private var studentsList: MutableList<RemoteDataStudentsTfc> = mutableListOf()
-    private var lastKnownTotalRecords: Int = 0
-
     suspend fun getAllUsers(
         limit: Int,
         page: Int
     ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
         val totalRecords = TableSqlStudentsTFC.select(rut).count()
-
-        if (totalRecords.toInt() != lastKnownTotalRecords || studentsList.isEmpty()) {
-            studentsList.clear()
-            val offset = if (page > 1) (page - 1) * limit else 0
-            TableSqlStudentsTFC
-                .selectAll()
-                .limit(count = limit)
-                .offset(start = offset.toLong())
-                .forEach { row ->
-                    val student = RemoteDataStudentsTfc(
-                        rut = row[rut],
-                        name = row[name],
-                        address = row[address],
-                        phone = row[phone],
-                        email = row[email],
-                        grade = row[grade],
-                        desHealth = row[desHealth],
-                        person = row[person],
-                        taller = row[taller],
-                        idTaller = row[idTaller],
-                        detailGrade = row[detailGrade]
-                    )
-                    studentsList.add(student)
-                }
-            lastKnownTotalRecords = totalRecords.toInt()
-        }
-
         val offset = if (page > 1) (page - 1) * limit else 0
-        val paginatedUsers = studentsList.subList(offset, (offset + limit).coerceAtMost(studentsList.size))
+        val studentsList = mutableListOf<RemoteDataStudentsTfc>()
+        TableSqlStudentsTFC
+            .selectAll()
+            .limit(count = limit).offset(start = offset.toLong())
+            .forEach { row ->
+                val student = RemoteDataStudentsTfc(
+                    rut = row[rut],
+                    name = row[name],
+                    address = row[address],
+                    phone = row[phone],
+                    email = row[email],
+                    grade = row[grade],
+                    desHealth = row[desHealth],
+                    person = row[person],
+                    taller = row[taller],
+                    idTaller = row[idTaller],
+                    detailGrade = row[detailGrade]
+                )
+                studentsList.add(student)
+            }
 
         val hasNextPage = offset + limit < totalRecords
         val hasPreviousPage = offset > 0
@@ -74,7 +63,7 @@ class DatabaseRepository {
             hasNextPage = hasNextPage,
             totalRecords = totalRecords,
             totalPages = totalPages,
-            listTFC = paginatedUsers
+            listTFC = studentsList
         )
     }
 
