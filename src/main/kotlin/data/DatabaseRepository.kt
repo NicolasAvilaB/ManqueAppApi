@@ -30,7 +30,11 @@ class DatabaseRepository {
         page: Int
     ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
         val totalRecords = TableSqlStudentsTFC.select(rut).count()
-        val offset = if (page > 1) (page - 1) * limit else 0
+        val totalPages = ceil(totalRecords.toDouble() / limit).toInt()
+
+        val adjustedPage = if (page > totalPages) totalPages else page
+
+        val offset = if (adjustedPage > 1) (adjustedPage - 1) * limit else 0
         val studentsList = mutableListOf<RemoteDataStudentsTfc>()
         TableSqlStudentsTFC
             .selectAll()
@@ -54,11 +58,9 @@ class DatabaseRepository {
 
         val hasNextPage = offset + limit < totalRecords
         val hasPreviousPage = offset > 0
-        val totalPages = ceil(totalRecords.toDouble() / limit).toInt()
-
         RemoteListStudentsTfc(
             limit = limit,
-            currentPage = page,
+            currentPage = adjustedPage,
             hasPreviousPage = hasPreviousPage,
             hasNextPage = hasNextPage,
             totalRecords = totalRecords,
