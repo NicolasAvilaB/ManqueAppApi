@@ -1,26 +1,26 @@
 package data.model
 
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
-import java.sql.Connection
+import io.r2dbc.spi.ConnectionFactories
+import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object DatabaseFactory {
+    private lateinit var connectionFactory: ConnectionFactory
 
     fun init() {
-        Database.connect(
-            url = "jdbc:mysql://127.0.0.1:3306/nombre_base_de_datos?useSSL=false&serverTimezone=UTC",
-            driver = "com.mysql.cj.jdbc.Driver",
-            user = "usuario",
-            password = "password"
-        )
-        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_REPEATABLE_READ
+        if (!::connectionFactory.isInitialized) {
+            connectionFactory = ConnectionFactories
+                .get("r2dbc:mysql://" +
+                        "cmt107912_manqueuser:" +
+                        "Manque_2024_*%_Condor_*@mtalleres.com:3306/" +
+                        "cmt107912_manque?useSSL=false&serverTimezone=UTC")
+        }
     }
 
-    suspend fun <T> dbQuery(block: () -> T): T =
-        withContext(Dispatchers.IO) {
-            transaction { block() }
+    suspend fun <T> dbQuery(block: suspend (connectionFactory: ConnectionFactory) -> T): T {
+        return withContext(Dispatchers.IO) {
+            block(connectionFactory)
         }
+    }
 }

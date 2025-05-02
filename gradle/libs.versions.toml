@@ -5,6 +5,9 @@ h2-version = "2.3.232"
 kotlin-version = "2.1.10"
 ktor-version = "3.1.2"
 logback-version = "1.4.14"
+mysql-r2dbc-version = "1.4.0"
+kotlinx-reactor-version = "1.10.2"
+reactor-core-version = "3.5.3"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
@@ -12,6 +15,10 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor-version" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed-version" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed-version" }
+mysql-r2dbc = { module = "io.asyncer:r2dbc-mysql", version.ref = "mysql-r2dbc-version"}
+reactor-core = { module = "io.projectreactor:reactor-core", version.ref = "reactor-core-version"}
+kotlinx-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlinx-reactor-version"}
+kotlinx-reactive = { module ="org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-reactor-version"}
 h2 = { module = "com.h2database:h2", version.ref = "h2-version" }
 mysql = { module = "mysql:mysql-connector-java", version = "8.0.33" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-version" }

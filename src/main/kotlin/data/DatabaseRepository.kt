@@ -15,49 +15,64 @@ import data.tablesql.TableSqlStudentsTFC.person
 import data.tablesql.TableSqlStudentsTFC.phone
 import data.tablesql.TableSqlStudentsTFC.rut
 import data.tablesql.TableSqlStudentsTFC.taller
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.deleteWhere
+import io.r2dbc.spi.Connection
+import kotlin.math.ceil
+import kotlinx.coroutines.reactive.awaitSingle
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import kotlin.math.ceil
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
+import org.reactivestreams.Publisher
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 class DatabaseRepository {
 
     suspend fun getAllUsers(
         limit: Int,
         page: Int
-    ): RemoteListStudentsTfc = DatabaseFactory.dbQuery {
-        val totalRecords = TableSqlStudentsTFC.select(rut).count()
+    ): RemoteListStudentsTfc = DatabaseFactory.dbQuery { connection ->
+        val startConnection = Mono.from(connection.create())
+
+        val totalRecords = getTotalRecords(connection = startConnection).awaitSingle()
+
         val totalPages = ceil(totalRecords.toDouble() / limit).toInt()
-
         val adjustedPage = if (page > totalPages) totalPages else page
-
         val offset = if (adjustedPage > 1) (adjustedPage - 1) * limit else 0
+
         val studentsList = mutableListOf<RemoteDataStudentsTfc>()
-        TableSqlStudentsTFC
-            .selectAll()
-            .limit(count = limit).offset(start = offset.toLong())
-            .forEach { row ->
-                val student = RemoteDataStudentsTfc(
-                    rut = row[rut],
-                    name = row[name],
-                    address = row[address],
-                    phone = row[phone],
-                    email = row[email],
-                    grade = row[grade],
-                    desHealth = row[desHealth],
-                    person = row[person],
-                    taller = row[taller],
-                    idTaller = row[idTaller],
-                    detailGrade = row[detailGrade]
+
+        val results = startConnection.flatMap { conn ->
+            Mono.from(
+                conn.createStatement("SELECT * FROM registro_alumno_taller_tsc LIMIT $limit OFFSET $offset")
+                    .execute()
+            ).flatMapMany { result ->
+                Flux.from(
+                    result.map { row ->
+                        RemoteDataStudentsTfc(
+                            rut = row.get("Rut", String::class.java) ?: "",
+                            name = row.get("Nombre", String::class.java) ?: "",
+                            address = row.get("Direccion", String::class.java) ?: "",
+                            phone = row.get("Telefono", Int::class.java) ?: 0,
+                            email = row.get("Email", String::class.java) ?: "",
+                            grade = row.get("Curso", String::class.java) ?: "",
+                            desHealth = row.get("AntecedentesSalud", String::class.java) ?: "",
+                            person = row.get("Apoderado", String::class.java) ?: "",
+                            taller = row.get("Taller", String::class.java) ?: "",
+                            idTaller = row.get("IdTaller", Int::class.java) ?: 0,
+                            detailGrade = row.get("DetalleCurso", String::class.java) ?: ""
+                        )
+                    }
                 )
-                studentsList.add(student)
-            }
+            }.collectList()
+        }.awaitSingle()
+        studentsList.addAll(results)
 
         val hasNextPage = offset + limit < totalRecords
         val hasPreviousPage = offset > 0
+
         RemoteListStudentsTfc(
             limit = limit,
             currentPage = adjustedPage,
@@ -67,6 +82,19 @@ class DatabaseRepository {
             totalPages = totalPages,
             listTFC = studentsList
         )
+    }
+
+    private suspend fun getTotalRecords(connection: Mono<Connection>): Publisher<Long> {
+        return connection.flatMap { conn ->
+            Mono.from(
+                conn.createStatement("SELECT COUNT(rut) FROM registro_alumno_taller_tsc")
+                    .execute()
+            )
+                .flatMap { result ->
+                    val count = result.map { row -> row.get(0, Long::class.java) ?: 0L }
+                    Mono.just(count)
+                }
+        }.awaitSingle()
     }
 
     suspend fun insertStudent(student: RemoteDataStudentsTfc) = DatabaseFactory.dbQuery {
