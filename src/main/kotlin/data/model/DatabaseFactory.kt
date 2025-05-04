@@ -11,7 +11,7 @@ object DatabaseFactory {
     fun init() {
         if (!::connectionFactory.isInitialized) {
             connectionFactory = ConnectionFactories.get(
-                "r2dbc:mysql://cmt107912_manqueuser:Manque_2024_*%25_Condor_*@mtalleres.com:3306/cmt107912_manque?useSSL=false&serverTimezone=UTC"
+                "r2dbc:mysql://usuario basedatos:password@dominio:3306/base_de_datos?useSSL=false&serverTimezone=UTC"
             )
         }
     }
