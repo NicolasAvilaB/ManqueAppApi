@@ -1,6 +1,8 @@
 package com.manque.app.presentation.routes
 
 import com.manque.app.data.model.Constants.MESSAGE_ALL_RECORDS_NOT_FOUND
+import com.manque.app.data.model.Constants.MESSAGE_ERROR_INSERTED
+import com.manque.app.data.model.Constants.MESSAGE_NOT_INSERTED_SUCCESS
 import com.manque.app.data.model.Constants.MESSAGE_RUT_NOT_FOUND
 import com.manque.app.data.model.Constants.MESSAGE_STUDENT_DELETED_SUCCESS
 import com.manque.app.data.model.Constants.MESSAGE_STUDENT_INSERTED_SUCCESS
@@ -29,7 +31,7 @@ fun Route.studentsTFC() {
             page = page
         )
         if (users == null) {
-            call.respond(HttpStatusCode.BadRequest, MESSAGE_ALL_RECORDS_NOT_FOUND)
+            call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_ALL_RECORDS_NOT_FOUND))
         } else {
             call.respond(status = HttpStatusCode.OK, users)
         }
@@ -39,7 +41,7 @@ fun Route.studentsTFC() {
         val rut = call.parameters["rut"].toString()
         val student = databaseRepository.searchStudent(rut)
         if (student == null) {
-            call.respond(HttpStatusCode.BadRequest, MESSAGE_STUDENT_NOT_FOUND)
+            call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_STUDENT_NOT_FOUND))
         } else {
             call.respond(HttpStatusCode.OK, student)
         }
@@ -47,8 +49,16 @@ fun Route.studentsTFC() {
 
     post("/studentsTFC") {
         val student = call.receive<RemoteDataStudentsTfc>()
-        databaseRepository.insertStudent(student)
-        call.respond(HttpStatusCode.Created, MESSAGE_STUDENT_INSERTED_SUCCESS)
+        if (student == null) {
+            call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_NOT_INSERTED_SUCCESS))
+        } else {
+            val insert = databaseRepository.insertStudent(student)
+            if (insert) {
+                call.respond(HttpStatusCode.Created, RemoteErrorMessage(MESSAGE_STUDENT_INSERTED_SUCCESS))
+            } else {
+                call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_ERROR_INSERTED))
+            }
+        }
     }
 
     delete("/studentsTFC/{rut}") {
@@ -56,11 +66,11 @@ fun Route.studentsTFC() {
         if (rut == null) {
             call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_RUT_NOT_FOUND))
         } else {
-            val success = databaseRepository.deleteStudent(rut)
-            if (success) {
-                call.respond(HttpStatusCode.OK, MESSAGE_STUDENT_DELETED_SUCCESS)
+            val delete = databaseRepository.deleteStudent(rut)
+            if (delete) {
+                call.respond(HttpStatusCode.OK, RemoteErrorMessage(MESSAGE_STUDENT_DELETED_SUCCESS))
             } else {
-                call.respond(HttpStatusCode.BadRequest, MESSAGE_STUDENT_NOT_FOUND)
+                call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_STUDENT_NOT_FOUND))
             }
         }
     }
@@ -71,11 +81,11 @@ fun Route.studentsTFC() {
             call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_RUT_NOT_FOUND))
         } else {
             val updatedStudent = call.receive<RemoteDataStudentsTfc>()
-            val success = databaseRepository.updateStudent(rut, updatedStudent)
-            if (success) {
-                call.respond(HttpStatusCode.OK, MESSAGE_STUDENT_UPDATED_SUCCESS)
+            val update = databaseRepository.updateStudent(rut, updatedStudent)
+            if (update) {
+                call.respond(HttpStatusCode.OK, RemoteErrorMessage(MESSAGE_STUDENT_UPDATED_SUCCESS))
             } else {
-                call.respond(HttpStatusCode.BadRequest, MESSAGE_STUDENT_NOT_FOUND)
+                call.respond(HttpStatusCode.BadRequest, RemoteErrorMessage(MESSAGE_STUDENT_NOT_FOUND))
             }
         }
     }
